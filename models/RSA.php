@@ -29,6 +29,12 @@ class RSA {
 
     public function encrypt($message, $e, $n) {
         $messageInt = $this->stringToInt($message);
+
+        // Check if message is too large for the key
+        if (bccomp($messageInt, $n) >= 0) {
+            throw new Exception("Message too large for RSA key. Message size: $messageInt, Key size: $n");
+        }
+
         $encrypted = bcpowmod($messageInt, $e, $n);
         return $encrypted;
     }

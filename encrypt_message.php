@@ -22,7 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
         try {
             $rsa = new RSA();
             $publicKeyData = json_decode($receiverPublicKey, true);
-            $encrypted = $rsa->encrypt($message, $publicKeyData['e'], $publicKeyData['n']);
+
+            // Always encrypt character by character to avoid size issues
+            $encryptedParts = [];
+            for ($i = 0; $i < strlen($message); $i++) {
+                $char = $message[$i];
+                $encryptedChar = $rsa->encrypt($char, $publicKeyData['e'], $publicKeyData['n']);
+                $encryptedParts[] = $encryptedChar;
+            }
+            $encrypted = implode(',', $encryptedParts);
             echo json_encode(['success' => true, 'encrypted' => $encrypted]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => 'Encryption failed: ' . $e->getMessage()]);

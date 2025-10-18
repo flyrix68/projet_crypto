@@ -30,10 +30,12 @@ $hasKeys = !empty($userKeys);
         .user-list li.selected { background: #007bff; }
         .chat-area { flex: 1; display: flex; flex-direction: column; }
         .chat-header { background: #007bff; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        .messages { flex: 1; padding: 1rem; overflow-y: auto; background: #f8f9fa; }
-        .message { margin-bottom: 1rem; padding: 0.5rem; border-radius: 8px; max-width: 70%; }
+        .messages { flex: 1; padding: 0.3rem; overflow-y: auto; background: #f8f9fa; max-height: 250px; }
+        .message { margin-bottom: 0.3rem; padding: 0.3rem; border-radius: 6px; max-width: 70%; cursor: pointer; user-select: text; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; font-size: 0.9em; }
         .message.sent { background: #007bff; color: white; margin-left: auto; }
         .message.received { background: white; border: 1px solid #ddd; }
+        .message:hover { opacity: 0.8; }
+        .message.selected { border: 2px solid #28a745; box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); }
         .message-input { display: flex; padding: 1rem; background: white; border-top: 1px solid #ddd; }
         .message-input input { flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
         .message-input button { padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; margin-left: 0.5rem; cursor: pointer; }
@@ -52,8 +54,8 @@ $hasKeys = !empty($userKeys);
             <button id="showKeyFormBtn" style="width: 100%; padding: 0.5rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 0.5rem;">Choose Prime Numbers</button>
             <form id="keyForm" style="display: none;">
                 <input type="password" id="keyPassword" placeholder="Your password" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                <input type="text" id="primeP" placeholder="Prime P" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
-                <input type="text" id="primeQ" placeholder="Prime Q" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                <input type="text" id="primeP" placeholder="Prime P (ex: 100003)" value="100003" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                <input type="text" id="primeQ" placeholder="Prime Q (ex: 200003)" value="200003" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
                 <button type="submit" id="generateKeysBtn" style="width: 100%; padding: 0.5rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Generate RSA Keys</button>
             </form>
             <div id="keyStatus" style="margin-top: 0.5rem; font-size: 0.9em;"></div>
@@ -63,6 +65,7 @@ $hasKeys = !empty($userKeys);
             <h3 style="margin-top: 0; color: #155724;">✅ RSA Keys Generated</h3>
             <p style="margin: 0; font-size: 0.9em; color: #155724;">Your RSA keys are ready for encryption/decryption.</p>
             <button id="showKeysBtn" style="margin-top: 0.5rem; padding: 0.5rem; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">Show My Keys</button>
+            <button id="regenerateKeysBtn" style="margin-top: 0.5rem; padding: 0.5rem; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer; width: 100%;">🔄 Regenerate Keys</button>
             <div id="keysDisplay" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: white; border-radius: 4px; border: 1px solid #ddd;">
                 <h4 style="margin-top: 0; color: #333;">Your RSA Keys</h4>
                 <p><strong>Public Key:</strong></p>
@@ -73,6 +76,16 @@ $hasKeys = !empty($userKeys);
                     <button id="sharePublicKeyBtn" style="padding: 0.3rem 0.6rem; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.8em;">Copy Public Key</button>
                     <button id="sharePrivateKeyBtn" style="padding: 0.3rem 0.6rem; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.8em;">⚠️ Copy Private Key</button>
                 </div>
+            </div>
+            <div id="regenerateSection" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
+                <h4 style="margin-top: 0; color: #856404;">Regenerate RSA Keys</h4>
+                <form id="regenerateKeyForm">
+                    <input type="password" id="regeneratePassword" placeholder="Your password" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    <input type="text" id="regeneratePrimeP" placeholder="Prime P (ex: 100003)" value="100003" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    <input type="text" id="regeneratePrimeQ" placeholder="Prime Q (ex: 200003)" value="200003" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+                    <button type="submit" id="regenerateKeysSubmitBtn" style="width: 100%; padding: 0.5rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Generate New Keys</button>
+                </form>
+                <div id="regenerateStatus" style="margin-top: 0.5rem; font-size: 0.9em;"></div>
             </div>
         </div>
         <?php endif; ?>
@@ -207,6 +220,24 @@ $hasKeys = !empty($userKeys);
                         });
                     }
                 }
+            });
+        }
+
+        const regenerateKeysBtn = document.getElementById('regenerateKeysBtn');
+        if (regenerateKeysBtn) {
+            regenerateKeysBtn.addEventListener('click', function() {
+                const regenerateSection = document.getElementById('regenerateSection');
+                if (regenerateSection) {
+                    regenerateSection.style.display = regenerateSection.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        }
+
+        const regenerateKeyForm = document.getElementById('regenerateKeyForm');
+        if (regenerateKeyForm) {
+            regenerateKeyForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                regenerateKeys();
             });
         }
         <?php endif; ?>
@@ -363,6 +394,47 @@ $hasKeys = !empty($userKeys);
             });
         }
 
+        function regenerateKeys() {
+            const password = document.getElementById('regeneratePassword').value;
+            const primeP = document.getElementById('regeneratePrimeP').value.trim();
+            const primeQ = document.getElementById('regeneratePrimeQ').value.trim();
+            const statusDiv = document.getElementById('regenerateStatus');
+
+            if (!password) {
+                statusDiv.textContent = 'Password is required';
+                statusDiv.style.color = '#dc3545';
+                return;
+            }
+
+            statusDiv.textContent = 'Regenerating RSA keys...';
+            statusDiv.style.color = '#666';
+
+            let body = `password=${encodeURIComponent(password)}`;
+            if (primeP) body += `&prime_p=${encodeURIComponent(primeP)}`;
+            if (primeQ) body += `&prime_q=${encodeURIComponent(primeQ)}`;
+
+            fetch('generate_keys.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.textContent = 'RSA keys regenerated successfully!';
+                    statusDiv.style.color = '#28a745';
+                    setTimeout(() => location.reload(), 2000); // Reload page after 2 seconds
+                } else {
+                    statusDiv.textContent = 'Key regeneration failed: ' + (data.error || 'Unknown error');
+                    statusDiv.style.color = '#dc3545';
+                }
+            })
+            .catch(error => {
+                statusDiv.textContent = 'Key regeneration error: ' + error.message;
+                statusDiv.style.color = '#dc3545';
+            });
+        }
+
         function loadMessages() {
             if (currentChatUserId) {
                 fetch(`get_messages.php?other_user_id=${currentChatUserId}`)
@@ -376,6 +448,37 @@ $hasKeys = !empty($userKeys);
                         messageDiv.className = 'message ' + (msg.sender_id == <?php echo $_SESSION['user_id']; ?> ? 'sent' : 'received');
                         messageDiv.textContent = msg.decrypted_message || msg.encrypted_message;
                         messageDiv.title = `From: ${msg.sender_username}, Time: ${msg.sent_at}`;
+
+                        // Add click handler for message selection
+                        messageDiv.addEventListener('click', function() {
+                            // Remove selected class from all messages
+                            document.querySelectorAll('.message').forEach(m => m.classList.remove('selected'));
+                            // Add selected class to clicked message
+                            this.classList.add('selected');
+
+                            // Copy message content to input field
+                            const messageInput = document.getElementById('messageInput');
+                            if (messageInput) {
+                                messageInput.value = this.textContent;
+                                messageInput.focus();
+                                messageInput.select();
+                            }
+                        });
+
+                        // Add double-click handler for instant copy
+                        messageDiv.addEventListener('dblclick', function() {
+                            navigator.clipboard.writeText(this.textContent).then(function() {
+                                // Visual feedback
+                                const originalClass = messageDiv.className;
+                                messageDiv.className += ' selected';
+                                setTimeout(() => {
+                                    messageDiv.className = originalClass;
+                                }, 200);
+                            }).catch(function(err) {
+                                console.error('Failed to copy: ', err);
+                            });
+                        });
+
                         messagesDiv.appendChild(messageDiv);
                     });
                     messagesDiv.scrollTop = messagesDiv.scrollHeight;

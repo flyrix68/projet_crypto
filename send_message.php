@@ -8,6 +8,9 @@ if (session_status() == PHP_SESSION_NONE) {
 ini_set('display_errors', 0);
 error_reporting(0);
 
+// Set JSON header
+header('Content-Type: application/json');
+
 require_once __DIR__ . '/controllers/MessageController.php';
 $messageController = new MessageController();
 $messageController->sendMessage();

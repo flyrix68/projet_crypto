@@ -10,12 +10,10 @@ class Message {
     }
 
     public function sendMessage($senderId, $receiverId, $message, $receiverPublicKey) {
-        // Encrypt message with receiver's public key
-        $encryptedMessage = $this->encryptMessage($message, $receiverPublicKey);
-
+        // For now, store message as plain text - encryption happens in frontend
         // Insert message
         $stmt = $this->db->prepare("INSERT INTO messages (sender_id, receiver_id, encrypted_message) VALUES (?, ?, ?)");
-        return $stmt->execute(array($senderId, $receiverId, $encryptedMessage));
+        return $stmt->execute(array($senderId, $receiverId, $message));
     }
 
     public function sendEncryptedMessage($senderId, $receiverId, $encryptedMessage) {

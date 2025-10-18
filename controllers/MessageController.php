@@ -18,19 +18,12 @@ class MessageController {
             $message = $_POST['message'];
             $encrypted = isset($_POST['encrypted']) ? $_POST['encrypted'] : 'false';
 
-            if ($encrypted === 'true') {
-                // Message is already encrypted
+            try {
+                // Message is already encrypted from frontend
                 $this->messageModel->sendEncryptedMessage($_SESSION['user_id'], $receiverId, $message);
                 echo json_encode(['success' => true]);
-            } else {
-                // Check if receiver exists and has public key
-                $receiver = $this->userModel->getPublicKey($receiverId);
-                if ($receiver !== null) {
-                    $this->messageModel->sendMessage($_SESSION['user_id'], $receiverId, $message, $receiver);
-                    echo json_encode(['success' => true]);
-                } else {
-                    echo json_encode(['success' => false, 'error' => 'Receiver not found or has no public key']);
-                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'error' => 'Send failed: ' . $e->getMessage()]);
             }
         } else {
             echo json_encode(['success' => false, 'error' => 'Unauthorized']);
