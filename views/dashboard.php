@@ -23,23 +23,54 @@ $hasKeys = !empty($userKeys);
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; height: 100vh; }
         .sidebar { width: 250px; background: #343a40; color: white; padding: 1rem; }
-        .sidebar h2 { margin-top: 0; }
+        .sidebar h2 { margin-top: 0; font-size: 1.2rem; }
         .user-list { list-style: none; padding: 0; }
         .user-list li { padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #495057; }
         .user-list li:hover { background: #495057; }
         .user-list li.selected { background: #007bff; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; }
-        .chat-header { background: #007bff; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        .messages { flex: 1; padding: 0.3rem; overflow-y: auto; background: #f8f9fa; max-height: 250px; }
-        .message { margin-bottom: 0.3rem; padding: 0.3rem; border-radius: 6px; max-width: 70%; cursor: pointer; user-select: text; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; font-size: 0.9em; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .chat-header { background: #007bff; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .chat-header h3 { margin: 0; font-size: 1rem; }
+        .messages { flex: 1; padding: 0.3rem; overflow-y: auto; background: #f8f9fa; min-height: 0; }
+        .message { margin-bottom: 0.3rem; padding: 0.3rem; border-radius: 6px; max-width: 100%; cursor: pointer; user-select: text; word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap; font-size: 0.9em; max-height: none; line-height: 1.4; }
         .message.sent { background: #007bff; color: white; margin-left: auto; }
         .message.received { background: white; border: 1px solid #ddd; }
         .message:hover { opacity: 0.8; }
         .message.selected { border: 2px solid #28a745; box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); }
-        .message-input { display: flex; padding: 1rem; background: white; border-top: 1px solid #ddd; }
-        .message-input input { flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
-        .message-input button { padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; margin-left: 0.5rem; cursor: pointer; }
+        .message-input { display: flex; padding: 1rem; background: white; border-top: 1px solid #ddd; flex-shrink: 0; }
+        .message-input input { flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; min-width: 0; }
+        .message-input button { padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; margin-left: 0.5rem; cursor: pointer; white-space: nowrap; }
         .logout { background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; max-height: 200px; overflow-y: auto; }
+            .user-list { display: flex; flex-wrap: wrap; }
+            .user-list li { flex: 1; min-width: 120px; text-align: center; }
+            .chat-area { height: calc(100vh - 200px); }
+            .message { font-size: 0.8em; padding: 0.2rem; }
+            .message-input { padding: 0.5rem; }
+            .message-input button { padding: 0.4rem 0.8rem; font-size: 0.9em; }
+            .chat-header { padding: 0.5rem; }
+            .chat-header h3 { font-size: 0.9rem; }
+        }
+        
+        @media (max-width: 480px) {
+            .user-list li { min-width: 100px; font-size: 0.9em; }
+            .message { font-size: 0.75em; }
+            .message-input { flex-direction: column; gap: 0.5rem; }
+            .message-input input { margin-bottom: 0.5rem; }
+            .message-input button { margin-left: 0; justify-content: center; }
+            .sidebar h2 { font-size: 1rem; }
+            .sidebar { padding: 0.5rem; }
+        }
+        
+        @media (max-width: 320px) {
+            .chat-header h3 { font-size: 0.8rem; }
+            .message { font-size: 0.7em; }
+            .user-list li { min-width: 80px; font-size: 0.8em; padding: 0.3rem; }
+        }
     </style>
 </head>
 <body>
@@ -435,6 +466,40 @@ $hasKeys = !empty($userKeys);
             });
         }
 
+        // Function to get optimal characters per line based on screen width
+        function getCharsPerLine() {
+            const screenWidth = window.innerWidth;
+            if (screenWidth <= 320) return 20;  // Very small screens
+            if (screenWidth <= 480) return 25;  // Small phones
+            if (screenWidth <= 768) return 30;  // Tablets and large phones
+            return 30;  // Desktop - default 30 characters as requested
+        }
+
+        // Function to format message text with line breaks every specified number of characters
+        function formatMessageText(text, maxCharsPerLine) {
+            if (!text) return '';
+            
+            const lines = [];
+            let currentLine = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                currentLine += text[i];
+                
+                // Add line break when we reach max characters per line
+                if (currentLine.length >= maxCharsPerLine) {
+                    lines.push(currentLine);
+                    currentLine = '';
+                }
+            }
+            
+            // Add remaining characters
+            if (currentLine.length > 0) {
+                lines.push(currentLine);
+            }
+            
+            return lines.join('\n');
+        }
+
         function loadMessages() {
             if (currentChatUserId) {
                 fetch(`get_messages.php?other_user_id=${currentChatUserId}`)
@@ -446,7 +511,12 @@ $hasKeys = !empty($userKeys);
                     messages.forEach(msg => {
                         const messageDiv = document.createElement('div');
                         messageDiv.className = 'message ' + (msg.sender_id == <?php echo $_SESSION['user_id']; ?> ? 'sent' : 'received');
-                        messageDiv.textContent = msg.decrypted_message || msg.encrypted_message;
+                        
+                        // Format message text to break lines according to screen size
+                        const messageText = msg.decrypted_message || msg.encrypted_message;
+                        const charsPerLine = getCharsPerLine();
+                        const formattedText = formatMessageText(messageText, charsPerLine);
+                        messageDiv.textContent = formattedText;
                         messageDiv.title = `From: ${msg.sender_username}, Time: ${msg.sent_at}`;
 
                         // Add click handler for message selection
